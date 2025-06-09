@@ -72,6 +72,7 @@ export function SignIn() {
         localStorage.setItem("user", JSON.stringify(userData));
         toast.success("Signed in successfully!");
         router.push("/dashboard");
+        router.refresh(); // Force a refresh of the page to update auth state
       } else {
         toast.error("No user data received");
       }
@@ -118,6 +119,7 @@ export function SignIn() {
         localStorage.setItem("user", JSON.stringify(userData));
         toast.success(`Signed in with ${provider} successfully!`);
         router.push("/dashboard");
+        router.refresh(); // Force a refresh of the page to update auth state
       } else {
         toast.error("No user data received");
       }
