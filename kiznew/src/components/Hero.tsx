@@ -24,6 +24,7 @@ const Hero = () => {
         <div className="inline-block bg-red-300 px-4 py-1 rounded-full border-2 border-black mb-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
           #1 Dating App of 2025
         </div>
+        <Link href="/dashboard">
         <h2 className="text-4xl md:text-6xl font-bold leading-tight">
           Find Your{" "}
           <span className="bg-pink-500 text-white px-2 -rotate-2 inline-block">
@@ -31,6 +32,7 @@ const Hero = () => {
           </span>{" "}
           Today!
         </h2>
+        </Link>
         <p className="text-lg md:text-xl mt-6 mb-8">
           Join thousands of singles looking for true love and meaningful
           connections. Our unique matching algorithm helps you find people who
@@ -38,7 +40,7 @@ const Hero = () => {
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
           <Link
-            href="#"
+            href="/dashboard"
             className="bg-pink-400 px-6 py-3 rounded-xl border-2 border-black font-semibold text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-white"
           >
             Find Love Now

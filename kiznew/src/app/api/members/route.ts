@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { PrismaClient } from "@/generated/prisma";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { membersData } from "../../../../prisma/membersData";
-
-const prisma = new PrismaClient();
 
 export async function GET() {
   try {
@@ -15,6 +13,7 @@ export async function GET() {
     });
     return NextResponse.json(members);
   } catch (error) {
+    console.error("Error fetching members:", error);
     return NextResponse.json(
       { error: "Failed to fetch members" },
       { status: 500 }
@@ -24,6 +23,15 @@ export async function GET() {
 
 export async function POST() {
   try {
+    // First, check if we already have members
+    const existingMembers = await prisma.member.count();
+    if (existingMembers > 0) {
+      return NextResponse.json(
+        { message: "Members already exist" },
+        { status: 400 }
+      );
+    }
+
     const members = await Promise.all(
       membersData.map(async (member) => {
         return prisma.user.create({
@@ -56,11 +64,13 @@ export async function POST() {
         });
       })
     );
+
     return NextResponse.json({
       message: "Members created successfully",
-      members,
+      count: members.length,
     });
   } catch (error) {
+    console.error("Error creating members:", error);
     return NextResponse.json(
       { error: "Failed to create members" },
       { status: 500 }
