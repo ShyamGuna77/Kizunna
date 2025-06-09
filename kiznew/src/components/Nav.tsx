@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Heart,
@@ -26,36 +26,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  image: string | null;
-}
+import { useAuth } from "@/app/hooks/useAuth";
 
 export function Nav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        console.log("Loaded user data:", userData);
-        setUser(userData);
-      } catch (err) {
-        console.error("Error parsing user data:", err);
-        localStorage.removeItem("user");
-      }
-    }
-  }, []);
+  const { user, clearUser } = useAuth();
 
   const isActive = (path: string) => pathname === path;
 
@@ -69,8 +47,7 @@ export function Nav() {
   const handleSignOut = async () => {
     try {
       await authClient.signOut();
-      localStorage.removeItem("user");
-      setUser(null);
+      clearUser();
       toast.success("Signed out successfully");
       router.push("/Sign-in");
     } catch (err) {
@@ -129,7 +106,9 @@ export function Nav() {
                         ?.split(" ")
                         .map((n) => n[0])
                         .join("")
-                        .toUpperCase()}
+                        .toUpperCase() ||
+                        user.email?.[0]?.toUpperCase() ||
+                        "U"}
                     </AvatarFallback>
                   </Avatar>
                 </Button>

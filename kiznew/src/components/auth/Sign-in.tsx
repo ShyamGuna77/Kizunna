@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/hooks/useAuth";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -28,6 +29,7 @@ type FormValues = z.infer<typeof formSchema>;
 export function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { updateUser } = useAuth();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -68,11 +70,10 @@ export function SignIn() {
           email: response.data.user.email,
           image: response.data.user.image || null,
         };
-        console.log("Setting user data:", userData);
-        localStorage.setItem("user", JSON.stringify(userData));
+
+        updateUser(userData);
         toast.success("Signed in successfully!");
         router.push("/dashboard");
-        router.refresh(); // Force a refresh of the page to update auth state
       } else {
         toast.error("No user data received");
       }
@@ -115,11 +116,10 @@ export function SignIn() {
           email: response.data.user.email,
           image: response.data.user.image || null,
         };
-        console.log("Setting user data:", userData);
-        localStorage.setItem("user", JSON.stringify(userData));
+
+        updateUser(userData);
         toast.success(`Signed in with ${provider} successfully!`);
         router.push("/dashboard");
-        router.refresh(); // Force a refresh of the page to update auth state
       } else {
         toast.error("No user data received");
       }
