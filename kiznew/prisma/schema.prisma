@@ -15,15 +15,17 @@ datasource db {
 }
 
 model User {
-  id            String       @id @default(uuid())
+  id            String    @id @default(uuid())
   email         String    @unique
   name          String?
   emailVerified Boolean
   image         String?
+  passwordHash  String?
   createdAt     DateTime
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
+  member        Member?
 
   @@map("user")
 }
@@ -44,7 +46,8 @@ model Session {
 }
 
 model Account {
-  id                    String    @id
+  id String @id
+
   accountId             String
   providerId            String
   userId                String
@@ -73,3 +76,27 @@ model Verification {
   @@map("verification")
 }
 
+model Member {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  name        String
+  gender      String
+  dateOfBirth DateTime
+  created     DateTime @default(now())
+  updated     DateTime @default(now())
+  description String
+  city        String
+  country     String
+  image       String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos      Photo[]
+}
+
+model Photo {
+  id       String  @id @default(cuid())
+  url      String
+  publicId String?
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
