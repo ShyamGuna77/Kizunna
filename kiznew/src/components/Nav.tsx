@@ -1,15 +1,61 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-import { Heart, Menu, Users, MessageCircle, List, X } from "lucide-react";
+import {
+  Heart,
+  Menu,
+  Users,
+  MessageCircle,
+  List,
+  X,
+  LogOut,
+  User,
+  Settings,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
-export default function Navbar() {
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+}
+
+export function Nav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        console.log("Loaded user data:", userData);
+        setUser(userData);
+      } catch (err) {
+        console.error("Error parsing user data:", err);
+        localStorage.removeItem("user");
+      }
+    }
+  }, []);
 
   const isActive = (path: string) => pathname === path;
 
@@ -19,6 +65,19 @@ export default function Navbar() {
         ? "bg-pink-400 text-white border-pink-400"
         : "bg-white border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px]"
     }`;
+
+  const handleSignOut = async () => {
+    try {
+      await authClient.signOut();
+      localStorage.removeItem("user");
+      setUser(null);
+      toast.success("Signed out successfully");
+      router.push("/Sign-in");
+    } catch (err) {
+      console.error("Failed to sign out:", err);
+      toast.error("Failed to sign out");
+    }
+  };
 
   return (
     <div className="bg-pink-50">
@@ -53,13 +112,69 @@ export default function Navbar() {
         </div>
 
         <div className="md:flex hidden gap-6">
-          <Button className="text-sm font-bold border-2 border-black bg-white text-black px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:text-white hover:bg-pink-400 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
-            Sign In
-          </Button>
-
-          <Button className="text-sm font-bold border-2 border-black bg-pink-400 text-white px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
-            Sign Out
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="relative h-10 w-10 rounded-full"
+                >
+                  <Avatar className="h-10 w-10 border-2 border-black">
+                    <AvatarImage
+                      src={user.image || undefined}
+                      alt={user.name || user.email}
+                    />
+                    <AvatarFallback className="bg-pink-400 text-black font-bold text-lg">
+                      {user.name
+                        ?.split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {user.name}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push("/profile")}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/settings")}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Link href="/Sign-in">
+                <Button className="text-sm font-bold border-2 border-black bg-white text-black px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:text-white hover:bg-pink-400 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
+                  Sign In
+                </Button>
+              </Link>
+              <Link href="/Sign-up">
+                <Button className="text-sm font-bold border-2 border-black bg-pink-400 text-white px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
+                  Sign Up
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         <div className="md:hidden">
@@ -129,28 +244,6 @@ export default function Navbar() {
                   <List className="h-5 w-5" />
                   Lists
                 </Link>
-              </motion.div>
-
-              <motion.div
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="w-full"
-              >
-                <Button className="w-full text-sm font-bold border-2 border-black bg-white text-black px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:text-white hover:bg-pink-400 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
-                  Sign In
-                </Button>
-              </motion.div>
-
-              <motion.div
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="w-full"
-              >
-                <Button className="w-full text-sm font-bold border-2 border-black bg-pink-400 text-white px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all">
-                  Sign Out
-                </Button>
               </motion.div>
             </div>
           </motion.div>
