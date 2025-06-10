@@ -148,7 +148,7 @@ export const membersData = [
     created: "2020-02-25",
     lastActive: "2020-06-11",
     description:
-      "Voluptate sunt adipisicing ea nisi ex ullamco veniam dolor. Dolor do et exercitation in. Aute enim pariatur amet commodo. Deserunt consectetur quis culpa aliqua voluptate ipsum exercitation exercitation exercitation ea aliqua sunt.\r\n",
+      "Voluptate sunt adipisicing ea nisi ex ullamco veniam dolor. Dolor do et exercitation in. Aute enim pariatur amet commodo. Deserunt consectetur quis culpa aliqua voluptate ipsum exercitation exercitation exercitation ea aliqua sunt",
     city: "Lupton",
     country: "Luxembourg",
     image: "/images/M4.jpg",
