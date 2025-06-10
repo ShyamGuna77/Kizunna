@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import AddMembersButton from "./AddMembersButton";
 import { Heart, MessageCircle, Image as ImageIcon } from "lucide-react";
-
+import { getSession } from "@/lib/session";
+import { redirect } from "next/navigation";
 type Member = {
   id: string;
   userId: string;
@@ -64,7 +65,12 @@ const cardColors = [
 
 export default async function DashboardPage() {
   const members = await getMembers();
+  const session = await getSession();
+  if (!session) {
+    redirect("/Sign-in");
+  }
 
+  console.log(session);
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 p-8">
       <div className="max-w-7xl mx-auto">

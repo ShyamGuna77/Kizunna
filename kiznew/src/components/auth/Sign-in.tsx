@@ -61,7 +61,6 @@ export function SignIn() {
         return;
       }
 
-      
       if ("user" in response.data) {
         const userData = {
           id: response.data.user.id,
