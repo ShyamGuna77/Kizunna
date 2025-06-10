@@ -74,11 +74,11 @@ export function Nav() {
         </motion.div>
 
         <div className="md:flex hidden gap-6 justify-center flex-1">
-          <Link href="/Matches" className={linkClass("/Matches")}>
+          <Link href="/matches" className={linkClass("/Matches")}>
             <Users className="h-5 w-5" />
             Matches
           </Link>
-          <Link href="/Chats" className={linkClass("/Chats")}>
+          <Link href="/chats" className={linkClass("/Chats")}>
             <MessageCircle className="h-5 w-5" />
             Chats
           </Link>

@@ -1,9 +1,9 @@
 import React from 'react'
 
-function Page() {
+function Matches() {
   return (
-    <div>Page</div>
+    <div>Matches</div>
   )
 }
 
-export default Page
+export default Matches
