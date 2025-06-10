@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
- 
 }
 
 datasource db {
@@ -90,6 +89,8 @@ model Member {
   image       String?
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   photos      Photo[]
+  likedBy     Like[]   @relation("LikedBy")
+  likes       Like[]   @relation("Likes")
 }
 
 model Photo {
@@ -99,4 +100,16 @@ model Photo {
 
   memberId String
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  fromId    String
+  toId      String
+  createdAt DateTime @default(now())
+  from      Member   @relation("Likes", fields: [fromId], references: [id], onDelete: Cascade)
+  to        Member   @relation("LikedBy", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@unique([fromId, toId])
+  @@map("like")
 }
