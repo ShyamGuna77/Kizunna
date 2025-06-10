@@ -1,10 +1,37 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { membersData } from "../../../../prisma/membersData";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get("userId");
+
   try {
+    if (userId) {
+      // Get specific user
+      const member = await prisma.member.findFirst({
+        where: {
+          user: {
+            email: userId,
+          },
+        },
+        include: {
+          user: true,
+          photos: true,
+        },
+      });
+
+      if (!member) {
+        return NextResponse.json(
+          { error: "Member not found" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json(member);
+    }
+
+    // Get all members
     const members = await prisma.member.findMany({
       include: {
         user: true,
