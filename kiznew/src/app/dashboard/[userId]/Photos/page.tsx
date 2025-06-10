@@ -73,8 +73,6 @@ export default async function MemberPhotos({
                 <p className="text-gray-600">
                   {member.city}, {member.country}
                 </p>
-
-                
               </div>
 
               <Link

@@ -1,6 +1,3 @@
-
-
-
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -11,9 +8,7 @@ async function getMember(userId: string) {
   try {
     const member = await prisma.member.findFirst({
       where: {
-        user: {
-          email: userId,
-        },
+        userId: userId,
       },
       include: {
         user: true,
@@ -81,7 +76,7 @@ export default async function MemberChat({
               </div>
 
               <Link
-                href={`/dashboard/${userId}/photos`}
+                href={`/dashboard/${userId}/Photos`}
                 className="w-full bg-purple-300 px-4 py-3 rounded-lg border-2 border-black flex items-center justify-center gap-2 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
                 View Photos
@@ -119,7 +114,7 @@ export default async function MemberChat({
                 <div className="flex justify-start">
                   <div className="bg-pink-300 p-3 rounded-lg border-2 border-black max-w-[70%]">
                     <p>
-                      Hi! I'm doing great, thanks for asking! How about you?
+                      Hi! I&apos;m doing great, thanks for asking! How about you?
                     </p>
                   </div>
                 </div>

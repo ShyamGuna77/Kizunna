@@ -83,7 +83,7 @@ export default async function MemberDetails({
                   <span>Like Profile</span>
                 </button>
                 <Link
-                  href={`/dashboard/${userId}/Chat`}
+                  href={`/dashboard/${userId}/chat`}
                   className="w-full bg-blue-300 px-4 py-3 rounded-lg border-2 border-black flex items-center justify-center gap-2 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                 >
                   <MessageCircle className="w-5 h-5" />
