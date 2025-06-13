@@ -6,6 +6,8 @@ import AddMembersButton from "./AddMembersButton";
 import { Heart, MessageCircle, Image as ImageIcon } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
+import LikeButton from "./LikeButton";
+
 type Member = {
   id: string;
   userId: string;
@@ -18,6 +20,9 @@ type Member = {
   user: {
     email: string;
   };
+  likedBy: {
+    fromId: string;
+  }[];
 };
 
 function calculateAge(dateOfBirth: Date) {
@@ -38,11 +43,46 @@ function calculateAge(dateOfBirth: Date) {
 
 async function getMembers() {
   try {
+    const session = await getSession();
+    if (!session?.user?.id) {
+      return [];
+    }
+
+    // Get or create the current user's member profile
+    let currentMember = await prisma.member.findUnique({
+      where: { userId: session.user.id },
+    });
+
+    if (!currentMember) {
+      // Create a new member profile if it doesn't exist
+      currentMember = await prisma.member.create({
+        data: {
+          userId: session.user.id,
+          name: session.user.name || "New Member",
+          gender: "Other",
+          dateOfBirth: new Date(),
+          description: "No description yet",
+          city: "Unknown",
+          country: "Unknown",
+        },
+      });
+    }
+
     const members = await prisma.member.findMany({
+      where: {
+        id: {
+          not: currentMember.id, // Exclude current user
+        },
+      },
       include: {
         user: {
           select: {
             email: true,
+          },
+        },
+        likedBy: {
+          where: {
+            fromId: currentMember.id,
           },
         },
       },
@@ -112,8 +152,11 @@ export default async function DashboardPage() {
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                     </div>
-                    <div className="absolute -bottom-3 -right-3 bg-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                      <Heart className="h-5 w-5 text-pink-500" fill="#ec4899" />
+                    <div className="absolute -bottom-3 -right-3">
+                      <LikeButton
+                        memberId={member.id}
+                        initialLiked={member.likedBy.length > 0}
+                      />
                     </div>
                   </div>
 
@@ -154,7 +197,7 @@ export default async function DashboardPage() {
                     <span className="text-sm">Chat</span>
                   </Link>
                   <Link
-                    href={`/dashboard/${member.userId}/photos`}
+                    href={`/dashboard/${member.userId}/Photos`}
                     className="flex-1 bg-purple-300 px-3 py-2 rounded-lg border-2 border-black flex items-center justify-center gap-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                   >
                     <ImageIcon className="w-4 h-4" />

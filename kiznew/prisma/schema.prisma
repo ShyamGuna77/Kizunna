@@ -20,8 +20,8 @@ model User {
   emailVerified Boolean
   image         String?
   passwordHash  String?
-  createdAt     DateTime
-  updatedAt     DateTime
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
   member        Member?
@@ -78,19 +78,21 @@ model Verification {
 model Member {
   id          String   @id @default(cuid())
   userId      String   @unique
-  name        String
-  gender      String
-  dateOfBirth DateTime
+  name        String   @default("New Member")
+  gender      String   @default("Other")
+  dateOfBirth DateTime @default(now())
   created     DateTime @default(now())
-  updated     DateTime @default(now())
-  description String
-  city        String
-  country     String
+  updated     DateTime @updatedAt
+  description String   @default("No description yet")
+  city        String   @default("Unknown")
+  country     String   @default("Unknown")
   image       String?
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   photos      Photo[]
   likedBy     Like[]   @relation("LikedBy")
   likes       Like[]   @relation("Likes")
+
+  @@index([userId])
 }
 
 model Photo {
@@ -100,6 +102,8 @@ model Photo {
 
   memberId String
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
 }
 
 model Like {
@@ -111,5 +115,7 @@ model Like {
   to        Member   @relation("LikedBy", fields: [toId], references: [id], onDelete: Cascade)
 
   @@unique([fromId, toId])
+  @@index([fromId])
+  @@index([toId])
   @@map("like")
 }
