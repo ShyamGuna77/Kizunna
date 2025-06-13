@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const formSchema = z
   .object({
@@ -98,7 +99,7 @@ export function SignUp() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6">
+    <div className="w-full max-w-md mx-auto p-8">
       <div className="bg-white border-4 border-black rounded-lg p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         <h2 className="text-3xl font-bold mb-6 text-center">Create Account</h2>
         <Form {...form}>
@@ -224,6 +225,17 @@ export function SignUp() {
             </svg>
             Google
           </Button>
+          <div className="col-span-2 flex justify-center">
+            <p className="text-center text-sm text-gray-500">
+              Already have an account?{" "}
+              <Link
+                href="/Sign-in"
+                className="text-pink-700 font-medium hover:underline hover:text-pink-500"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

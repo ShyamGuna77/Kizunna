@@ -86,6 +86,10 @@ export function Nav() {
             <List className="h-5 w-5" />
             Likes
           </Link>
+          <Link href="/dashboard/edit" className={linkClass("/Edit")}>
+            <User className="h-5 w-5" />
+            Edit Profile
+          </Link>
         </div>
 
         <div className="md:flex hidden gap-6">
@@ -125,7 +129,9 @@ export function Nav() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push("/dashboard/edit")}>
+                <DropdownMenuItem
+                  onClick={() => router.push("/dashboard/edit")}
+                >
                   <User className="mr-2 h-4 w-4" />
                   <span>Edit Profile</span>
                 </DropdownMenuItem>
@@ -222,6 +228,20 @@ export function Nav() {
                 >
                   <List className="h-5 w-5" />
                   Likes
+                </Link>
+              </motion.div>
+              <motion.div
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="w-full"
+              >
+                <Link
+                  href="/dashboard/edit"
+                  className={`${linkClass("/Edit")} w-full justify-center`}
+                >
+                  <User className="h-5 w-5" />
+                  Edit Profile
                 </Link>
               </motion.div>
             </div>
