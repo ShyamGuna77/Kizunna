@@ -218,7 +218,7 @@ export function Nav() {
               >
                 <Link
                   href="/Lists"
-                  className={`${linkClass("/Lists")} w-full justify-center`}
+                  className={`${linkClass("/Likes")} w-full justify-center`}
                 >
                   <List className="h-5 w-5" />
                   Likes

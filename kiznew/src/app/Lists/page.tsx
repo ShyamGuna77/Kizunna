@@ -34,8 +34,8 @@ export default async function ListsPage() {
         <Tabs defaultValue="mutual" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="mutual">Mutual Likes</TabsTrigger>
-            <TabsTrigger value="liked">You Liked</TabsTrigger>
-            <TabsTrigger value="likedBy">Liked You</TabsTrigger>
+            <TabsTrigger value="liked">Members You Liked</TabsTrigger>
+            <TabsTrigger value="likedBy">Members Liked You</TabsTrigger>
           </TabsList>
 
           <TabsContent value="mutual">
@@ -91,7 +91,7 @@ function MemberCard({ member }: { member: Member }) {
       <div className="flex items-center gap-4">
         <div className="relative w-16 h-16 rounded-lg border-2 border-black overflow-hidden">
           <Image
-            src={member.image || "/placeholder.png"}
+            src={member.image || "/images/placeholder.jpg"}
             alt={member.name}
             fill
             className="object-cover"
