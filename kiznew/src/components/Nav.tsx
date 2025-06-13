@@ -221,7 +221,7 @@ export function Nav() {
                   className={`${linkClass("/Lists")} w-full justify-center`}
                 >
                   <List className="h-5 w-5" />
-                  Lists
+                  Likes
                 </Link>
               </motion.div>
             </div>
