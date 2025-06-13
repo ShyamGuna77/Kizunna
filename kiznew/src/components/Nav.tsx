@@ -84,7 +84,7 @@ export function Nav() {
           </Link>
           <Link href="/Lists" className={linkClass("/Lists")}>
             <List className="h-5 w-5" />
-            Lists
+            Likes
           </Link>
         </div>
 
@@ -125,9 +125,9 @@ export function Nav() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push("/profile")}>
+                <DropdownMenuItem onClick={() => router.push("/dashboard/edit")}>
                   <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                  <span>Edit Profile</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push("/settings")}>
                   <Settings className="mr-2 h-4 w-4" />
