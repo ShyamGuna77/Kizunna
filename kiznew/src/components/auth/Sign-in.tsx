@@ -70,7 +70,10 @@ export function SignIn() {
           image: response.data.user.image || null,
         };
 
+        // Update user state and localStorage
         updateUser(userData);
+        localStorage.setItem("user", JSON.stringify(userData));
+
         toast.success("Signed in successfully!");
         router.push("/dashboard");
       } else {

@@ -35,6 +35,14 @@ export function useAuth() {
 
   useEffect(() => {
     loadUser();
+    // Add event listener for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "user") {
+        loadUser();
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [loadUser]);
 
   const updateUser = useCallback((userData: User | null) => {

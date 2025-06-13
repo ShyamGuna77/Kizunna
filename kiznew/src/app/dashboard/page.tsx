@@ -71,7 +71,7 @@ async function getMembers() {
     const members = await prisma.member.findMany({
       where: {
         id: {
-          not: currentMember.id, // Exclude current user
+          not: currentMember.id, 
         },
       },
       include: {
@@ -145,7 +145,10 @@ export default async function DashboardPage() {
                   <div className="relative mb-4">
                     <div className="w-full aspect-square rounded-lg border-2 border-black overflow-hidden bg-white">
                       <Image
-                        src={member.image || "/placeholder.png"}
+                        src={
+                          member.image ||
+                          "/images/placeholder.jpg"
+                        }
                         alt={member.name}
                         fill
                         className="object-cover object-top"
