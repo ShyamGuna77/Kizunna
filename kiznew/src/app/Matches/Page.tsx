@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, MessageCircle, ArrowRight, Eye, MapPin } from "lucide-react";
+import { Heart, MessageCircle, Eye, MapPin } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
@@ -116,7 +116,7 @@ export default async function MatchesPage() {
             <Heart className="w-16 h-16 mx-auto mb-6 text-gray-300" />
             <h2 className="text-2xl font-bold mb-4">No Likes Yet</h2>
             <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              When someone likes your pictures, they'll appear here. Start by
+              When someone likes your pictures, they&apos;ll appear here. Start by
               adding some great photos to your profile!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
