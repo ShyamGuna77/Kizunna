@@ -76,6 +76,10 @@ export function Nav() {
         <div className="md:flex hidden gap-6 justify-center flex-1">
           <Link href="/dashboard" className={linkClass("/Matches")}>
             <Users className="h-5 w-5" />
+            Dashboard
+          </Link>
+          <Link href="/matches" className={linkClass("/Matches")}>
+            <Users className="h-5 w-5" />
             Matches
           </Link>
           <Link href="/chats" className={linkClass("/Chats")}>
