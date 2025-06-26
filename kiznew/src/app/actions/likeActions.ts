@@ -23,9 +23,9 @@ export async function toggleLike(toId: string) {
           name: session.user.name || "New Member",
           gender: "Other",
           dateOfBirth: new Date(),
-          description: "No description yet",
-          city: "Unknown",
-          country: "Unknown",
+          description: "I am a new member",
+          city: "Mumbai",
+          country: "India",
         },
       });
     }

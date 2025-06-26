@@ -22,13 +22,31 @@ async function getMember(userId: string) {
   }
 }
 
+async function getOtherMembers(userId: string) {
+  try {
+    const members = await prisma.member.findMany({
+      where: {
+        userId: {
+          not: userId,
+        },
+      },
+      take: 3, // Show first 3 other members
+    });
+    return members;
+  } catch (error) {
+    console.error("Error fetching other members:", error);
+    return [];
+  }
+}
+
 export default async function MemberDetails({
   params,
 }: {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }) {
-  const { userId } = params;
+  const { userId } = await params;
   const member = await getMember(userId);
+  const otherMembers = await getOtherMembers(userId);
 
   if (!member) {
     return (
@@ -87,7 +105,7 @@ export default async function MemberDetails({
                   className="w-full bg-blue-300 px-4 py-3 rounded-lg border-2 border-black flex items-center justify-center gap-2 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                 >
                   <MessageCircle className="w-5 h-5" />
-                  <span>Start Chat</span>
+                  <span>View Chats</span>
                 </Link>
                 <Link
                   href={`/dashboard/${userId}/Photos`}
@@ -123,8 +141,9 @@ export default async function MemberDetails({
             </div>
           </div>
 
-          {/* Right Content - Details */}
-          <div className="md:col-span-2">
+          {/* Right Content - Details & Chat Options */}
+          <div className="md:col-span-2 space-y-6">
+            {/* Profile Details */}
             <div className="bg-white rounded-xl border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="space-y-6">
                 <div>
@@ -162,6 +181,42 @@ export default async function MemberDetails({
                 </div>
               </div>
             </div>
+
+            {/* Chat with Others */}
+            {otherMembers.length > 0 && (
+              <div className="bg-white rounded-xl border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <h2 className="text-xl font-bold mb-4">Chat with Others</h2>
+                <div className="space-y-3">
+                  {otherMembers.map((otherMember) => (
+                    <div
+                      key={otherMember.id}
+                      className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200"
+                    >
+                      <div className="relative w-12 h-12 rounded-lg border-2 border-black overflow-hidden">
+                        <Image
+                          src={otherMember.image || "/placeholder.jpg"}
+                          alt={otherMember.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{otherMember.name}</h3>
+                        <p className="text-sm text-gray-600">
+                          {otherMember.city}, {otherMember.country}
+                        </p>
+                      </div>
+                      <Link
+                        href={`/chats?target=${otherMember.userId}`}
+                        className="bg-blue-300 px-4 py-2 rounded-lg border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-sm font-medium"
+                      >
+                        Chat
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

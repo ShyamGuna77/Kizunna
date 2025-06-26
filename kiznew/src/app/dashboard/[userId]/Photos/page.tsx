@@ -24,9 +24,9 @@ async function getMember(userId: string) {
 export default async function MemberPhotos({
   params,
 }: {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }) {
-  const { userId } = params;
+  const { userId } = await params;
   const member = await getMember(userId);
 
   if (!member) {
@@ -76,10 +76,10 @@ export default async function MemberPhotos({
               </div>
 
               <Link
-                href={`/dashboard/${userId}/chat`}
+                href="/chats"
                 className="w-full bg-blue-300 px-4 py-3 rounded-lg border-2 border-black flex items-center justify-center gap-2 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
-                Start Chat
+                View Chats
               </Link>
             </div>
           </div>

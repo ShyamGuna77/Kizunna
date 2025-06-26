@@ -71,7 +71,7 @@ async function getMembers() {
     const members = await prisma.member.findMany({
       where: {
         id: {
-          not: currentMember.id, 
+          not: currentMember.id,
         },
       },
       include: {
@@ -145,10 +145,7 @@ export default async function DashboardPage() {
                   <div className="relative mb-4">
                     <div className="w-full aspect-square rounded-lg border-2 border-black overflow-hidden bg-white">
                       <Image
-                        src={
-                          member.image ||
-                          "/images/placeholder.jpg"
-                        }
+                        src={member.image || "/images/placeholder.jpg"}
                         alt={member.name}
                         fill
                         className="object-cover object-top"
@@ -193,7 +190,7 @@ export default async function DashboardPage() {
 
                 <div className="flex gap-2 pt-4 mt-4 border-t-2 border-black">
                   <Link
-                    href={`/dashboard/${member.userId}/chat`}
+                    href={`/dashboard/${session.user.id}/chat`}
                     className="flex-1 bg-blue-300 px-3 py-2 rounded-lg border-2 border-black flex items-center justify-center gap-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                   >
                     <MessageCircle className="w-4 h-4" />
