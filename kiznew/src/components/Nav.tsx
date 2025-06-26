@@ -197,7 +197,7 @@ export function Nav() {
                 className="w-full"
               >
                 <Link
-                  href="/Matches"
+                  href="/matches"
                   className={`${linkClass("/Matches")} w-full justify-center`}
                 >
                   <Users className="h-5 w-5" />
@@ -212,7 +212,7 @@ export function Nav() {
                 className="w-full"
               >
                 <Link
-                  href="/Chats"
+                  href="/chats"
                   className={`${linkClass("/Chats")} w-full justify-center`}
                 >
                   <MessageCircle className="h-5 w-5" />
