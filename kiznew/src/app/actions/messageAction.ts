@@ -64,14 +64,29 @@ export async function sendMessage(
     // Trigger Pusher event for real-time updates only if Pusher is configured
     if (pusher) {
       try {
-        await pusher.trigger("chat-channel", "new-message", {
-          message,
-          channelId: getChannelId(fromMember.id, toMember.id),
+        const channelId = getChannelId(fromMember.id, toMember.id);
+        const publicChannelName = `chat-${channelId}`;
+        console.log(`Triggering Pusher event on channel: ${publicChannelName}`);
+
+        await pusher.trigger(publicChannelName, "new-message", {
+          message: {
+            id: message.id,
+            content: message.content,
+            createdAt: message.createdAt,
+            fromId: message.fromId,
+            toId: message.toId,
+            from: message.from,
+            to: message.to,
+          },
         });
+
+        console.log("Pusher event triggered successfully");
       } catch (pusherError) {
         console.error("Pusher trigger error:", pusherError);
         // Continue execution even if Pusher fails
       }
+    } else {
+      console.warn("Pusher not configured, skipping real-time update");
     }
 
     revalidatePath("/chats");

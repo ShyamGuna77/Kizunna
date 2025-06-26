@@ -11,4 +11,12 @@ if (!pusherKey || !pusherCluster) {
 export const pusherClient = new PusherClient(pusherKey || "", {
   cluster: pusherCluster || "us2",
   forceTLS: true,
+  // Temporarily disabled for testing
+  // channelAuthorization: {
+  //   endpoint: "/api/pusher",
+  //   transport: "ajax",
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //   },
+  // },
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Send, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import { sendMessage, markMessagesAsRead } from "@/app/actions/messageAction";
@@ -50,119 +50,278 @@ export default function ChatInterface({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState("connecting");
+  const [connectionStatus, setConnectionStatus] = useState("initialized");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const channelRef = useRef<{ name: string } | null>(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
+  // Helper function to generate consistent channel IDs
+  const getChannelId = useCallback((userId1: string, userId2: string) => {
+    const sortedIds = [userId1, userId2].sort();
+    return `chat-${sortedIds[0]}-${sortedIds[1]}`;
+  }, []);
+
+  // Helper function to convert message to our interface
+  const convertMessage = useCallback(
+    (message: {
+      id: string;
+      content: string;
+      createdAt: Date | string;
+      fromId: string;
+      toId: string;
+      from: {
+        id: string;
+        name?: string | null;
+        image?: string | null;
+        user?: { name?: string | null; image?: string | null };
+      };
+      to: {
+        id: string;
+        name?: string | null;
+        image?: string | null;
+        user?: { name?: string | null; image?: string | null };
+      };
+    }): Message => {
+      return {
+        id: message.id,
+        content: message.content,
+        createdAt:
+          message.createdAt instanceof Date
+            ? message.createdAt.toISOString()
+            : message.createdAt,
+        fromId: message.fromId,
+        toId: message.toId,
+        from: {
+          id: message.from.id,
+          name: message.from.name || message.from.user?.name || "Unknown",
+          image: message.from.image || message.from.user?.image || undefined,
+        },
+        to: {
+          id: message.to.id,
+          name: message.to.name || message.to.user?.name || "Unknown",
+          image: message.to.image || message.to.user?.image || undefined,
+        },
+      };
+    },
+    []
+  );
+
+  // Helper function to check if message is for this conversation
+  const isMessageForThisConversation = useCallback(
+    (message: Message) => {
+      return (
+        (message.fromId === currentUserMemberId &&
+          message.toId === otherUserMemberId) ||
+        (message.fromId === otherUserMemberId &&
+          message.toId === currentUserMemberId)
+      );
+    },
+    [currentUserMemberId, otherUserMemberId]
+  );
+
+  // Helper function to add message without duplicates
+  const addMessageIfNotExists = useCallback((newMessage: Message) => {
+    setMessages((prev) => {
+      const exists = prev.some((m) => m.id === newMessage.id);
+      if (exists) {
+        console.log("Message already exists, skipping:", newMessage.id);
+        return prev;
+      }
+      console.log("Adding new message:", newMessage.id);
+      return [...prev, newMessage];
+    });
+  }, []);
+
+  // Set up Pusher connection and channel subscription
   useEffect(() => {
-    // Mark messages as read when chat is opened
-    markMessagesAsRead(otherUser.id, currentUserId);
+    if (!currentUserMemberId || !otherUserMemberId) {
+      console.log("Missing member IDs, skipping Pusher setup");
+      return;
+    }
 
-    // Subscribe to Pusher channel with error handling
-    try {
-      const channel = pusherClient.subscribe("chat-channel");
+    console.log("Setting up Pusher connection...");
 
-      // Set up connection status monitoring
-      pusherClient.connection.bind("connected", () => {
+    // Monitor connection state changes
+    const handleStateChange = (states: {
+      previous: string;
+      current: string;
+    }) => {
+      console.log(
+        `Pusher state changed: ${states.previous} -> ${states.current}`
+      );
+      setConnectionStatus(states.current);
+    };
+
+    const handleConnected = () => {
+      console.log("Pusher connected successfully");
+      setConnectionStatus("connected");
+    };
+
+    const handleDisconnected = () => {
+      console.log("Pusher disconnected");
+      setConnectionStatus("disconnected");
+    };
+
+    const handleError = (error: { error: { data: { code: number } } }) => {
+      console.error("Pusher connection error:", error);
+      setConnectionStatus("failed");
+    };
+
+    // Bind to connection events
+    pusherClient.connection.bind("state_change", handleStateChange);
+    pusherClient.connection.bind("connected", handleConnected);
+    pusherClient.connection.bind("disconnected", handleDisconnected);
+    pusherClient.connection.bind("error", handleError);
+
+    // Wait for connection to be established before subscribing
+    const setupChannel = () => {
+      if (pusherClient.connection.state !== "connected") {
+        console.log("Waiting for connection...");
+        setTimeout(setupChannel, 100);
+        return;
+      }
+
+      console.log("Connection established, setting up channel...");
+
+      // Create channel ID for this conversation
+      const channelId = getChannelId(currentUserMemberId, otherUserMemberId);
+      console.log(`Subscribing to channel: ${channelId}`);
+
+      // Subscribe to the public channel
+      const channel = pusherClient.subscribe(channelId);
+      channelRef.current = channel;
+
+      // Handle subscription success
+      channel.bind("pusher:subscription_succeeded", () => {
+        console.log(`Successfully subscribed to ${channelId}`);
         setConnectionStatus("connected");
-        console.log("Connected to Pusher");
+
+        // Mark messages as read when chat is opened
+        markMessagesAsRead(otherUser.id, currentUserId);
       });
 
-      pusherClient.connection.bind("disconnected", () => {
-        setConnectionStatus("disconnected");
-        console.log("Disconnected from Pusher");
-      });
+      // Handle subscription errors
+      channel.bind(
+        "pusher:subscription_error",
+        (error: { message: string }) => {
+          console.error(`Failed to subscribe to ${channelId}:`, error);
+          setConnectionStatus("failed");
+        }
+      );
 
-      pusherClient.connection.bind("error", (err: Error) => {
-        setConnectionStatus("error");
-        console.error("Pusher connection error:", err);
-      });
+      // Bind to new message events
+      channel.bind(
+        "new-message",
+        (data: {
+          message: {
+            id: string;
+            content: string;
+            createdAt: Date | string;
+            fromId: string;
+            toId: string;
+            from: {
+              id: string;
+              name?: string | null;
+              image?: string | null;
+              user?: { name?: string | null; image?: string | null };
+            };
+            to: {
+              id: string;
+              name?: string | null;
+              image?: string | null;
+              user?: { name?: string | null; image?: string | null };
+            };
+          };
+        }) => {
+          console.log("Received Pusher message:", data);
 
-      channel.bind("new-message", (data: { message: Message }) => {
-        const { message } = data;
+          const convertedMessage = convertMessage(data.message);
 
-        // Only add message if it's part of this conversation
-        if (
-          (message.fromId === currentUserMemberId &&
-            message.toId === otherUserMemberId) ||
-          (message.fromId === otherUserMemberId &&
-            message.toId === currentUserMemberId)
-        ) {
-          setMessages((prev) => [...prev, message]);
+          if (isMessageForThisConversation(convertedMessage)) {
+            addMessageIfNotExists(convertedMessage);
 
-          // Mark as read if we're the recipient
-          if (message.toId === currentUserMemberId) {
-            markMessagesAsRead(otherUser.id, currentUserId);
+            // Mark as read if we're the recipient
+            if (convertedMessage.toId === currentUserMemberId) {
+              markMessagesAsRead(otherUser.id, currentUserId);
+            }
+          } else {
+            console.log("Message not for this conversation, ignoring");
           }
         }
-      });
+      );
+    };
 
-      return () => {
-        pusherClient.unsubscribe("chat-channel");
-      };
-    } catch (error) {
-      console.error("Error setting up Pusher subscription:", error);
-      setConnectionStatus("error");
-    }
-  }, [currentUserId, otherUser.id, currentUserMemberId, otherUserMemberId]);
+    // Start the setup process
+    setupChannel();
+
+    // Cleanup function
+    return () => {
+      console.log("Cleaning up Pusher connection...");
+
+      // Unbind connection events
+      pusherClient.connection.unbind("state_change", handleStateChange);
+      pusherClient.connection.unbind("connected", handleConnected);
+      pusherClient.connection.unbind("disconnected", handleDisconnected);
+      pusherClient.connection.unbind("error", handleError);
+
+      // Unsubscribe from channel
+      if (channelRef.current) {
+        console.log("Unsubscribing from channel:", channelRef.current.name);
+        pusherClient.unsubscribe(channelRef.current.name);
+        channelRef.current = null;
+      }
+    };
+  }, [
+    currentUserId,
+    otherUser.id,
+    currentUserMemberId,
+    otherUserMemberId,
+    getChannelId,
+    convertMessage,
+    isMessageForThisConversation,
+    addMessageIfNotExists,
+  ]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || isSending) return;
 
     setIsSending(true);
+    const messageContent = newMessage.trim();
+    setNewMessage(""); // Clear input immediately for better UX
 
     try {
-      const result = await sendMessage(currentUserId, otherUser.id, newMessage);
+      console.log("Sending message:", messageContent);
+      const result = await sendMessage(
+        currentUserId,
+        otherUser.id,
+        messageContent
+      );
 
       if (result.success) {
-        setNewMessage("");
-        // Add the message to the local state immediately for better UX
+        console.log("Message sent successfully:", result.message);
+
+        // Add the message to local state immediately for better UX
         if (result.message) {
-          // Convert the message to match our interface
-          const convertedMessage: Message = {
-            ...result.message,
-            createdAt:
-              result.message.createdAt instanceof Date
-                ? result.message.createdAt.toISOString()
-                : result.message.createdAt,
-            from: {
-              id: result.message.from.id,
-              name:
-                result.message.from.name ||
-                result.message.from.user?.name ||
-                "Unknown",
-              image:
-                result.message.from.image ||
-                result.message.from.user?.image ||
-                undefined,
-            },
-            to: {
-              id: result.message.to.id,
-              name:
-                result.message.to.name ||
-                result.message.to.user?.name ||
-                "Unknown",
-              image:
-                result.message.to.image ||
-                result.message.to.user?.image ||
-                undefined,
-            },
-          };
-          setMessages((prev) => [...prev, convertedMessage]);
+          const convertedMessage = convertMessage(result.message);
+          addMessageIfNotExists(convertedMessage);
         }
       } else {
         console.error("Failed to send message:", result.error);
+        // Restore the message if sending failed
+        setNewMessage(messageContent);
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      // Restore the message if sending failed
+      setNewMessage(messageContent);
     } finally {
       setIsSending(false);
     }
@@ -173,6 +332,38 @@ export default function ChatInterface({
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const getConnectionStatusText = () => {
+    switch (connectionStatus) {
+      case "initialized":
+        return "Initializing...";
+      case "connecting":
+        return "Connecting...";
+      case "connected":
+        return "Online";
+      case "unavailable":
+        return "Unavailable";
+      case "failed":
+        return "Connection Failed";
+      case "disconnected":
+        return "Disconnected";
+      default:
+        return "Unknown";
+    }
+  };
+
+  const getConnectionStatusColor = () => {
+    switch (connectionStatus) {
+      case "connected":
+        return "bg-green-500";
+      case "connecting":
+        return "bg-yellow-500";
+      case "initialized":
+        return "bg-blue-500";
+      default:
+        return "bg-red-500";
+    }
   };
 
   return (
@@ -197,20 +388,10 @@ export default function ChatInterface({
         </div>
         <div className="flex items-center gap-2">
           <div
-            className={`w-2 h-2 md:w-3 md:h-3 rounded-full border-2 border-black ${
-              connectionStatus === "connected"
-                ? "bg-green-500"
-                : connectionStatus === "connecting"
-                ? "bg-yellow-500"
-                : "bg-red-500"
-            }`}
+            className={`w-2 h-2 md:w-3 md:h-3 rounded-full border-2 border-black ${getConnectionStatusColor()}`}
           ></div>
           <span className="text-xs text-gray-600 hidden sm:inline">
-            {connectionStatus === "connected"
-              ? "Online"
-              : connectionStatus === "connecting"
-              ? "Connecting..."
-              : "Offline"}
+            {getConnectionStatusText()}
           </span>
         </div>
       </div>
@@ -303,9 +484,7 @@ export default function ChatInterface({
         </form>
         {connectionStatus !== "connected" && (
           <p className="text-xs text-red-500 mt-2 text-center">
-            {connectionStatus === "connecting"
-              ? "Connecting to chat..."
-              : "Connection lost. Trying to reconnect..."}
+            {getConnectionStatusText()}
           </p>
         )}
       </div>
