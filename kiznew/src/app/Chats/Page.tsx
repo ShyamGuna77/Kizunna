@@ -84,7 +84,31 @@ async function ChatPage({ target }: { target: string }) {
 
     // Get messages between these users
     const messagesResult = await getMessages(session.user.id, target);
-    const messages = messagesResult.success ? messagesResult.messages : [];
+    const messages = messagesResult.success
+      ? messagesResult.messages || []
+      : [];
+
+    // Convert messages to match the Message interface
+    const convertedMessages = messages.map((message) => ({
+      id: message.id,
+      content: message.content,
+      createdAt:
+        message.createdAt instanceof Date
+          ? message.createdAt.toISOString()
+          : message.createdAt,
+      fromId: message.fromId,
+      toId: message.toId,
+      from: {
+        id: message.from.id,
+        name: message.from.name || message.from.user?.name || "Unknown",
+        image: message.from.image || message.from.user?.image || undefined,
+      },
+      to: {
+        id: message.to.id,
+        name: message.to.name || message.to.user?.name || "Unknown",
+        image: message.to.image || message.to.user?.image || undefined,
+      },
+    }));
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 p-8">
@@ -100,14 +124,15 @@ async function ChatPage({ target }: { target: string }) {
 
           <ChatInterface
             currentUserId={session.user.id}
+            currentUserImage={currentUser.image || undefined}
             otherUser={{
               id: target,
               name: targetUser.name,
-              image: targetUser.image,
+              image: targetUser.image || undefined,
               city: targetUser.city,
               country: targetUser.country,
             }}
-            initialMessages={messages}
+            initialMessages={convertedMessages}
             currentUserMemberId={currentUser.id}
             otherUserMemberId={targetUser.id}
           />
@@ -210,14 +235,15 @@ export default async function ChatsPage({
       return date.toLocaleDateString();
     }
   };
-
   // Separate inbox and outbox
-  const inboxMessages = conversations.filter(
-    (conv) => conv.lastMessage.fromId !== currentUserMember.id
-  );
-  const outboxMessages = conversations.filter(
-    (conv) => conv.lastMessage.fromId === currentUserMember.id
-  );
+  const inboxMessages =
+    conversations?.filter(
+      (conv) => conv.lastMessage.fromId !== currentUserMember.id
+    ) ?? [];
+  const outboxMessages =
+    conversations?.filter(
+      (conv) => conv.lastMessage.fromId === currentUserMember.id
+    ) ?? [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 p-8">
