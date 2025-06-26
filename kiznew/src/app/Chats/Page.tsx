@@ -444,8 +444,8 @@ export default async function ChatsPage({
               href="/test-chat"
               className="bg-blue-300 p-4 rounded-lg border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-center"
             >
-              <h3 className="font-bold mb-2">Test Chat</h3>
-              <p className="text-sm text-gray-600">Test chat functionality</p>
+              <h3 className="font-bold mb-2"> Chat</h3>
+              <p className="text-sm text-gray-600"> chat functionality</p>
             </Link>
           </div>
         </div>

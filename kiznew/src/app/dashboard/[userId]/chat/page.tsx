@@ -100,7 +100,7 @@ export default async function MemberChat({
     const messages = messagesResult.success ? messagesResult.messages : [];
 
     // Convert messages to match the Message interface
-    const convertedMessages = messages.map((message) => ({
+    const convertedMessages = messages?.map((message) => ({
       id: message.id,
       content: message.content,
       createdAt:
@@ -172,7 +172,7 @@ export default async function MemberChat({
                   city: targetUser.city,
                   country: targetUser.country,
                 }}
-                initialMessages={convertedMessages}
+                initialMessages={convertedMessages || []}
                 currentUserMemberId={member.id}
                 otherUserMemberId={targetUser.id}
               />
