@@ -68,7 +68,7 @@ async function ChatPage({ target }: { target: string }) {
             <div className="bg-white rounded-xl border-2 border-black p-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center">
               <h1 className="text-2xl font-bold mb-4">User Not Found</h1>
               <p className="text-gray-600 mb-6">
-                The user you're trying to chat with doesn't exist.
+                The user you&apos;re trying to chat with doesn&apos;t exist.
               </p>
               <Link
                 href="/chats"
