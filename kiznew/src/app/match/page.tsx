@@ -226,7 +226,7 @@ export default async function MatchesPage() {
                       View Photos
                     </Link>
                     <Link
-                      href={`/chats?target=${user.userId}`}
+                      href={`/messages?target=${user.userId}`}
                       className="flex-1 bg-blue-300 px-3 py-2 rounded-lg border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-center text-sm font-medium flex items-center justify-center gap-1"
                     >
                       <MessageCircle className="w-4 h-4" />

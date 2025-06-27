@@ -72,7 +72,7 @@ async function ChatPage({ target }: { target: string }) {
                 The user you&apos;re trying to chat with doesn&apos;t exist.
               </p>
               <Link
-                href="/chats"
+                href="/messages"
                 className="bg-blue-300 px-4 py-2 rounded-lg border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               >
                 Back to Chats
@@ -116,7 +116,7 @@ async function ChatPage({ target }: { target: string }) {
         <div className="max-w-4xl mx-auto">
           <div className="mb-6">
             <Link
-              href="/chats"
+              href="/messages"
               className="inline-block bg-pink-300 px-4 py-2 rounded-lg border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
             >
               ← Back to Chats
@@ -151,7 +151,7 @@ async function ChatPage({ target }: { target: string }) {
               Something went wrong while loading the chat.
             </p>
             <Link
-              href="/chats"
+              href="/messages"
               className="bg-blue-300 px-4 py-2 rounded-lg border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
             >
               Back to Chats
@@ -338,7 +338,7 @@ export default async function ChatsPage({
                       </div>
                     </div>
                     <Link
-                      href={`/chats?target=${conversation.otherUser.userId}`}
+                      href={`/messages?target=${conversation.otherUser.userId}`}
                       className="bg-blue-300 p-2 rounded-lg border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                     >
                       <ArrowRight className="w-4 h-4" />
@@ -407,7 +407,7 @@ export default async function ChatsPage({
                       </div>
                     </div>
                     <Link
-                      href={`/chats?target=${conversation.otherUser.userId}`}
+                      href={`/messages?target=${conversation.otherUser.userId}`}
                       className="bg-blue-300 p-2 rounded-lg border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                     >
                       <ArrowRight className="w-4 h-4" />
@@ -433,7 +433,7 @@ export default async function ChatsPage({
               </p>
             </Link>
             <Link
-              href="/matches"
+              href="/match"
               className="bg-orange-300 p-4 rounded-lg border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-center"
             >
               <h3 className="font-bold mb-2">View Matches</h3>

@@ -212,8 +212,8 @@ export function Nav() {
                 className="w-full"
               >
                 <Link
-                  href="/chats"
-                  className={`${linkClass("/chats")} w-full justify-center`}
+                  href="/messages"
+                  className={`${linkClass("/messages")} w-full justify-center`}
                 >
                   <MessageCircle className="h-5 w-5" />
                   Chats
