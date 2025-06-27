@@ -3,10 +3,17 @@ import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
 import AddMembersButton from "./AddMembersButton";
-import { Heart, MessageCircle, Image as ImageIcon } from "lucide-react";
+import {
+  Heart,
+  MessageCircle,
+  Image as ImageIcon,
+  Filter,
+  Users,
+} from "lucide-react";
 import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import LikeButton from "./LikeButton";
+import FilterControls from "./FilterControls";
 
 type Member = {
   id: string;
@@ -41,7 +48,11 @@ function calculateAge(dateOfBirth: Date) {
   return age;
 }
 
-async function getMembers() {
+async function getMembers(
+  genderFilter?: string,
+  minAge?: number,
+  maxAge?: number
+) {
   try {
     const session = await getSession();
     if (!session?.user?.id) {
@@ -68,12 +79,66 @@ async function getMembers() {
       });
     }
 
-    const members = await prisma.member.findMany({
-      where: {
-        id: {
-          not: currentMember.id,
-        },
+    // Calculate date range for age filtering
+    let dateFilter = {};
+    if (minAge !== undefined || maxAge !== undefined) {
+      const today = new Date();
+      const minDate = maxAge
+        ? new Date(
+            today.getFullYear() - maxAge - 1,
+            today.getMonth(),
+            today.getDate()
+          )
+        : undefined;
+      const maxDate = minAge
+        ? new Date(
+            today.getFullYear() - minAge,
+            today.getMonth(),
+            today.getDate()
+          )
+        : undefined;
+
+      if (minDate && maxDate) {
+        dateFilter = {
+          dateOfBirth: {
+            gte: minDate,
+            lte: maxDate,
+          },
+        };
+      } else if (minDate) {
+        dateFilter = {
+          dateOfBirth: {
+            gte: minDate,
+          },
+        };
+      } else if (maxDate) {
+        dateFilter = {
+          dateOfBirth: {
+            lte: maxDate,
+          },
+        };
+      }
+    }
+
+    // Build where clause
+    const whereClause: {
+      id: { not: string };
+      dateOfBirth?: { gte?: Date; lte?: Date };
+      gender?: string;
+    } = {
+      id: {
+        not: currentMember.id,
       },
+      ...dateFilter,
+    };
+
+    // Add gender filter if specified
+    if (genderFilter && genderFilter !== "All") {
+      whereClause.gender = genderFilter;
+    }
+
+    const members = await prisma.member.findMany({
+      where: whereClause,
       include: {
         user: {
           select: {
@@ -103,8 +168,17 @@ const cardColors = [
   "bg-[#FFE0B2]",
 ];
 
-export default async function DashboardPage() {
-  const members = await getMembers();
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ gender?: string; minAge?: string; maxAge?: string }>;
+}) {
+  const { gender, minAge, maxAge } = await searchParams;
+  const genderFilter = gender || "All";
+  const minAgeFilter = minAge ? parseInt(minAge) : undefined;
+  const maxAgeFilter = maxAge ? parseInt(maxAge) : undefined;
+
+  const members = await getMembers(genderFilter, minAgeFilter, maxAgeFilter);
   const session = await getSession();
   if (!session) {
     redirect("/Sign-in");
@@ -114,23 +188,48 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <div className="inline-block bg-pink-300 px-4 py-1 rounded-full border-2 border-black mb-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
             Our Members
           </div>
           <h1 className="text-4xl font-bold mb-4">Meet Amazing People</h1>
-          <p className="text-xl max-w-2xl mx-auto text-gray-600">
+          <p className="text-xl max-w-2xl mx-auto text-gray-600 mb-6">
             Discover our vibrant community of singles ready to connect and find
             their perfect match!
           </p>
+
+          {/* Filter Controls */}
+          <FilterControls
+            currentGender={genderFilter}
+            currentMinAge={minAgeFilter}
+            currentMaxAge={maxAgeFilter}
+          />
+        </div>
+
+        {/* Results Summary */}
+        <div className="mb-6 text-center">
+          <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            <Users className="w-4 h-4 text-pink-500" />
+            <span className="font-medium">
+              {members.length} {members.length === 1 ? "person" : "people"}{" "}
+              found
+            </span>
+            {(genderFilter !== "All" || minAge || maxAge) && (
+              <span className="text-sm text-gray-500 ml-2">(filtered)</span>
+            )}
+          </div>
         </div>
 
         {members.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-xl text-gray-600 mb-4">
-              No members found. Add some members to get started!
+              {genderFilter !== "All" || minAge || maxAge
+                ? "No members match your current filters. Try adjusting your preferences!"
+                : "No members found. Add some members to get started!"}
             </p>
-            <AddMembersButton />
+            {genderFilter === "All" && !minAge && !maxAge && (
+              <AddMembersButton />
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -66,7 +66,9 @@ export function Nav() {
           transition={{ duration: 0.5 }}
         >
           <div className="bg-pink-400 p-2 rounded-xl border-2 border-black shadow-[3px_3px_0px_rgba(0,0,0,1)]">
-            <Heart className="h-6 w-6 text-white" fill="white" />
+            <Link href="/">
+              <Heart className="h-6 w-6 text-white" fill="white" />
+            </Link>
           </div>
           <Link href="/">
             <h1 className="text-2xl font-bold ml-6">KIZUNA</h1>
