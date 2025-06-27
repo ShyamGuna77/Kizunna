@@ -67,7 +67,7 @@ export default function FilterControls({
         )}
       </div>
 
-      {/* Expanded Filter Panel */}
+      
       {isExpanded && (
         <div className="bg-white rounded-xl border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

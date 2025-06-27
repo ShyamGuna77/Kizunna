@@ -88,7 +88,7 @@ export async function sendMessage(
       console.warn("Pusher not configured, skipping real-time update");
     }
 
-    revalidatePath("/chats");
+    revalidatePath("/messages");
     revalidatePath(`/dashboard/${fromUserId}/chat`);
     revalidatePath(`/dashboard/${toUserId}/chat`);
 
@@ -171,7 +171,7 @@ export async function markMessagesAsRead(fromUserId: string, toUserId: string) {
       },
     });
 
-    revalidatePath("/chats");
+    revalidatePath("/messages");
     revalidatePath(`/dashboard/${toUserId}/chat`);
 
     return { success: true };
