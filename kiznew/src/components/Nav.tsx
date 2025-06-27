@@ -78,7 +78,7 @@ export function Nav() {
             <Users className="h-5 w-5" />
             Dashboard
           </Link>
-          <Link href="/matches" className={linkClass("/matches")}>
+          <Link href="/match" className={linkClass("/match")}>
             <Users className="h-5 w-5" />
             Matches
           </Link>
@@ -197,8 +197,8 @@ export function Nav() {
                 className="w-full"
               >
                 <Link
-                  href="/Matches"
-                  className={`${linkClass("/Matches")} w-full justify-center`}
+                  href="/match"
+                  className={`${linkClass("/match")} w-full justify-center`}
                 >
                   <Users className="h-5 w-5" />
                   Matches
@@ -212,8 +212,8 @@ export function Nav() {
                 className="w-full"
               >
                 <Link
-                  href="/Chats"
-                  className={`${linkClass("/Chats")} w-full justify-center`}
+                  href="/chats"
+                  className={`${linkClass("/chats")} w-full justify-center`}
                 >
                   <MessageCircle className="h-5 w-5" />
                   Chats
