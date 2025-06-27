@@ -82,7 +82,7 @@ export function Nav() {
             <Users className="h-5 w-5" />
             Matches
           </Link>
-          <Link href="/chats" className={linkClass("/chats")}>
+          <Link href="/messages" className={linkClass("/messages")}>
             <MessageCircle className="h-5 w-5" />
             Chats
           </Link>
