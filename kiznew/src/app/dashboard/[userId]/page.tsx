@@ -207,7 +207,7 @@ export default async function MemberDetails({
                         </p>
                       </div>
                       <Link
-                        href={`/chats?target=${otherMember.userId}`}
+                        href={`/messages?target=${otherMember.userId}`}
                         className="bg-blue-300 px-4 py-2 rounded-lg border-2 border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-sm font-medium"
                       >
                         Chat

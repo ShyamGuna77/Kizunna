@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -52,7 +53,7 @@ export default function ChatInterface({
   const [isSending, setIsSending] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("initialized");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const channelRef = useRef<{ name: string } | null>(null);
+  const channelRef = useRef<any>(null); 
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -62,13 +63,13 @@ export default function ChatInterface({
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Helper function to generate consistent channel IDs
+
   const getChannelId = useCallback((userId1: string, userId2: string) => {
     const sortedIds = [userId1, userId2].sort();
     return `chat-${sortedIds[0]}-${sortedIds[1]}`;
   }, []);
 
-  // Helper function to convert message to our interface
+
   const convertMessage = useCallback(
     (message: {
       id: string;
@@ -113,7 +114,7 @@ export default function ChatInterface({
     []
   );
 
-  // Helper function to check if message is for this conversation
+
   const isMessageForThisConversation = useCallback(
     (message: Message) => {
       return (
@@ -126,7 +127,7 @@ export default function ChatInterface({
     [currentUserMemberId, otherUserMemberId]
   );
 
-  // Helper function to add message without duplicates
+  
   const addMessageIfNotExists = useCallback((newMessage: Message) => {
     setMessages((prev) => {
       const exists = prev.some((m) => m.id === newMessage.id);
@@ -139,7 +140,7 @@ export default function ChatInterface({
     });
   }, []);
 
-  // Set up Pusher connection and channel subscription
+
   useEffect(() => {
     if (!currentUserMemberId || !otherUserMemberId) {
       console.log("Missing member IDs, skipping Pusher setup");
@@ -148,7 +149,7 @@ export default function ChatInterface({
 
     console.log("Setting up Pusher connection...");
 
-    // Monitor connection state changes
+   
     const handleStateChange = (states: {
       previous: string;
       current: string;
@@ -174,107 +175,59 @@ export default function ChatInterface({
       setConnectionStatus("failed");
     };
 
-    // Bind to connection events
+
     pusherClient.connection.bind("state_change", handleStateChange);
     pusherClient.connection.bind("connected", handleConnected);
     pusherClient.connection.bind("disconnected", handleDisconnected);
     pusherClient.connection.bind("error", handleError);
 
-    // Wait for connection to be established before subscribing
-    const setupChannel = () => {
-      if (pusherClient.connection.state !== "connected") {
-        console.log("Waiting for connection...");
-        setTimeout(setupChannel, 100);
-        return;
+    const channelId = getChannelId(currentUserMemberId, otherUserMemberId);
+    console.log(`Subscribing to channel: ${channelId}`);
+
+
+    const channel = pusherClient.subscribe(channelId);
+    channelRef.current = channel;
+
+    channel.bind("pusher:subscription_succeeded", () => {
+      console.log(`Successfully subscribed to ${channelId}`);
+      setConnectionStatus("connected");
+      markMessagesAsRead(otherUser.id, currentUserId);
+    });
+
+    // Handle subscription errors
+    channel.bind("pusher:subscription_error", (error: { message: string }) => {
+      console.error(`Failed to subscribe to ${channelId}:`, error);
+      setConnectionStatus("failed");
+    });
+
+    // Bind to new message events
+    const handleNewMessage = (data: { message: any }) => {
+      console.log("Received Pusher message:", data);
+      const convertedMessage = convertMessage(data.message);
+      if (isMessageForThisConversation(convertedMessage)) {
+        addMessageIfNotExists(convertedMessage);
+        // Mark as read if we're the recipient
+        if (convertedMessage.toId === currentUserMemberId) {
+          markMessagesAsRead(otherUser.id, currentUserId);
+        }
+      } else {
+        console.log("Message not for this conversation, ignoring");
       }
-
-      console.log("Connection established, setting up channel...");
-
-      // Create channel ID for this conversation
-      const channelId = getChannelId(currentUserMemberId, otherUserMemberId);
-      console.log(`Subscribing to channel: ${channelId}`);
-
-      // Subscribe to the public channel
-      const channel = pusherClient.subscribe(channelId);
-      channelRef.current = channel;
-
-      // Handle subscription success
-      channel.bind("pusher:subscription_succeeded", () => {
-        console.log(`Successfully subscribed to ${channelId}`);
-        setConnectionStatus("connected");
-
-        // Mark messages as read when chat is opened
-        markMessagesAsRead(otherUser.id, currentUserId);
-      });
-
-      // Handle subscription errors
-      channel.bind(
-        "pusher:subscription_error",
-        (error: { message: string }) => {
-          console.error(`Failed to subscribe to ${channelId}:`, error);
-          setConnectionStatus("failed");
-        }
-      );
-
-      // Bind to new message events
-      channel.bind(
-        "new-message",
-        (data: {
-          message: {
-            id: string;
-            content: string;
-            createdAt: Date | string;
-            fromId: string;
-            toId: string;
-            from: {
-              id: string;
-              name?: string | null;
-              image?: string | null;
-              user?: { name?: string | null; image?: string | null };
-            };
-            to: {
-              id: string;
-              name?: string | null;
-              image?: string | null;
-              user?: { name?: string | null; image?: string | null };
-            };
-          };
-        }) => {
-          console.log("Received Pusher message:", data);
-
-          const convertedMessage = convertMessage(data.message);
-
-          if (isMessageForThisConversation(convertedMessage)) {
-            addMessageIfNotExists(convertedMessage);
-
-            // Mark as read if we're the recipient
-            if (convertedMessage.toId === currentUserMemberId) {
-              markMessagesAsRead(otherUser.id, currentUserId);
-            }
-          } else {
-            console.log("Message not for this conversation, ignoring");
-          }
-        }
-      );
     };
-
-    // Start the setup process
-    setupChannel();
+    channel.bind("new-message", handleNewMessage);
 
     // Cleanup function
     return () => {
       console.log("Cleaning up Pusher connection...");
-
-      // Unbind connection events
       pusherClient.connection.unbind("state_change", handleStateChange);
       pusherClient.connection.unbind("connected", handleConnected);
       pusherClient.connection.unbind("disconnected", handleDisconnected);
       pusherClient.connection.unbind("error", handleError);
-
-      // Unsubscribe from channel
       if (channelRef.current) {
-        console.log("Unsubscribing from channel:", channelRef.current.name);
-        pusherClient.unsubscribe(channelRef.current.name);
+        channelRef.current.unbind("new-message", handleNewMessage);
+        channelRef.current.unbind("pusher:subscription_succeeded");
+        channelRef.current.unbind("pusher:subscription_error");
+        pusherClient.unsubscribe(channelId);
         channelRef.current = null;
       }
     };
@@ -397,16 +350,14 @@ export default function ChatInterface({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 p-3 md:p-4 overflow-y-auto space-y-3 bg-gradient-to-b from-pink-50 to-purple-50">
+      <div className="flex-1 p-3 md:p-6 overflow-y-auto space-y-5 bg-gradient-to-b from-pink-50 to-purple-50">
         {messages.length === 0 ? (
-          <div className="text-center text-gray-500 mt-6 md:mt-8">
-            <div className="mb-3 md:mb-4">
-              <MessageCircle className="w-8 h-8 md:w-12 md:h-12 mx-auto text-gray-300" />
+          <div className="text-center text-gray-400 mt-10 md:mt-16">
+            <div className="mb-4">
+              <MessageCircle className="w-12 h-12 mx-auto text-gray-200" />
             </div>
-            <p className="text-base md:text-lg font-medium mb-1 md:mb-2">
-              No messages yet
-            </p>
-            <p className="text-xs md:text-sm">
+            <p className="text-lg font-semibold mb-2">No messages yet</p>
+            <p className="text-sm">
               Start the conversation with {otherUser.name}!
             </p>
           </div>
@@ -421,14 +372,16 @@ export default function ChatInterface({
                 }`}
               >
                 <div
-                  className={`max-w-[75%] lg:max-w-[60%] p-3 rounded-2xl border-2 border-black ${
-                    isFromCurrentUser
-                      ? "bg-blue-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                      : "bg-pink-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                  }`}
+                  className={`relative max-w-[80%] lg:max-w-[60%] px-5 py-3 rounded-2xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-150
+                    ${
+                      isFromCurrentUser
+                        ? "bg-blue-200 hover:bg-blue-300 text-right ml-8"
+                        : "bg-pink-100 hover:bg-pink-200 text-left mr-8"
+                    }
+                  `}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <div className="relative w-5 h-5 rounded-full border border-black overflow-hidden">
+                    <div className="relative w-7 h-7 rounded-full border-2 border-black overflow-hidden bg-white">
                       <Image
                         src={
                           isFromCurrentUser
@@ -440,16 +393,16 @@ export default function ChatInterface({
                         className="object-cover"
                       />
                     </div>
-                    <p className="text-xs font-bold">
+                    <span className="text-xs font-bold text-gray-700">
                       {isFromCurrentUser ? "You" : otherUser.name}
-                    </p>
+                    </span>
                   </div>
-                  <p className="text-gray-800 mb-1 leading-relaxed text-sm">
+                  <p className="text-gray-900 mb-2 leading-relaxed text-base break-words">
                     {message.content}
                   </p>
-                  <p className="text-xs text-gray-600 text-right">
+                  <span className="absolute -bottom-3 right-2 text-xs text-gray-500 bg-white px-2 py-0.5 rounded-full border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                     {formatTime(message.createdAt)}
-                  </p>
+                  </span>
                 </div>
               </div>
             );
