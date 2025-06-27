@@ -28,7 +28,6 @@ export async function sendMessage(
   content: string
 ) {
   try {
-    // Get the member IDs for the user IDs
     const fromMember = await prisma.member.findUnique({
       where: { userId: fromUserId },
     });
@@ -65,10 +64,10 @@ export async function sendMessage(
     if (pusher) {
       try {
         const channelId = getChannelId(fromMember.id, toMember.id);
-        const publicChannelName = `chat-${channelId}`;
-        console.log(`Triggering Pusher event on channel: ${publicChannelName}`);
+        // channelId is already 'chat-xxx-yyy', do NOT add extra 'chat-' prefix
+        console.log(`Triggering Pusher event on channel: ${channelId}`);
 
-        await pusher.trigger(publicChannelName, "new-message", {
+        await pusher.trigger(channelId, "new-message", {
           message: {
             id: message.id,
             content: message.content,
